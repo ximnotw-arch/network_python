@@ -1,0 +1,28 @@
+[project]
+name = "homework-lecture-1"
+version = "1.0.0"
+description = "Домашние задания к лекции 1: Асинхронность в Python"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+# Таймаут на каждый тест (секунды)
+# CPU-bound тесты могут быть долгими, поэтому запас большой
+timeout = 60
+
+# Формат вывода
+console_output_style = "count"
+
+# Маркеры
+markers = [
+    "slow: медленные тесты (CPU-bound, >1с)",
+    "race: тесты race condition (могут быть нестабильны)",
+]
+
+# Фильтр предупреждений
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+
+# Параметры по умолчанию (CLI-флаги)
+addopts = "-v --tb=short --strict-markers --showlocals --color=yes"
