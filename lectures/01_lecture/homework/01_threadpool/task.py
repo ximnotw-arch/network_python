@@ -44,6 +44,7 @@ def fetch_one_with_delay(url_delay: tuple[str, float]) -> str:
 # ЗАДАНИЕ 1.1 — Базовый пул потоков
 # ═══════════════════════════════════════════════════════════
 
+import concurrent.futures
 
 def fetch_all(urls: list[str], max_workers: int = 4) -> list[str]:
     """Скачать все URL через ThreadPoolExecutor.
@@ -61,8 +62,8 @@ def fetch_all(urls: list[str], max_workers: int = 4) -> list[str]:
         >>> fetch_all(["a", "b", "c"], max_workers=2)
         ['data:a', 'data:b', 'data:c']
     """
-    # TODO: реализуйте
-    raise NotImplementedError
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        return list(executor.map(fetch_one, urls))
 
 
 # ═══════════════════════════════════════════════════════════
@@ -85,13 +86,27 @@ def fetch_all_with_errors(urls: list[str], max_workers: int = 4) -> list[str | N
         - Для "bad" URL вернуть None
         - Для остальных — результат fetch_one()
     """
-    # TODO: реализуйте
-    raise NotImplementedError
+    def fetch_one_with_error(url: str) -> str | None:
+        if "bad" in url:
+            raise ConnectionError(f"Failed to fetch {url}")
+        return fetch_one(url)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future = [executor.submit(fetch_one_with_error, url) for url in urls]
+        result = []
+
+        for elem in future:
+            try:
+                result.append(elem.result())
+            except ConnectionError:
+                result.append(None)
+
+    return result
 
 
 # ═══════════════════════════════════════════════════════════
 # ЗАДАНИЕ 1.3 — Прогресс-бар (повышенная сложность)
-# ═══════════════════════════════════════════════════════════
+# ══════════════════════════════════════════
 
 
 def fetch_all_with_progress(
@@ -123,5 +138,14 @@ def fetch_all_with_progress(
         )
         # completed[-1] == 3
     """
-    # TODO: реализуйте
-    raise NotImplementedError
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        total = len(urls)
+        completed = 0
+        future = [executor.submit(fetch_one, url) for url in urls]
+        results = []
+        for future in concurrent.futures.as_completed(future):
+            completed += 1
+            if progress_callback:
+                progress_callback(completed, total)
+            results.append(future.result())
+    return results
