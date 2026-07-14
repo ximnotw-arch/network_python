@@ -39,7 +39,7 @@ async def fetch_one_async(url: str) -> str:
         - Функция объявлена через async def
         - Возвращает f"data:{url}"
     """
-    await asyncio.sleep(0.01)
+    await asyncio.sleep(0.01) 
     return f"data:{url}"
 
 
