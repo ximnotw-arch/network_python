@@ -7,7 +7,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 
 from starlette.testclient import TestClient
 
-from solution import app
+from task import app
 
 client = TestClient(app)
 
@@ -175,3 +175,34 @@ class TestErrorResponseFormat:
         data = resp.json()
         assert "detail" in data, "Ответ об ошибке должен содержать detail"
         assert isinstance(data["detail"], str)
+
+class TestListItems:
+    def test_list_items_empty(self):
+        resp = client.get("/items")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "items" in data
+        assert isinstance(data["items"], list)
+
+    def test_list_items_with_data(self):
+        client.post("/items", json={"name": "Item 1"})
+        client.post("/items", json={"name": "Item 2"})
+        resp = client.get("/items")
+        assert resp.status_code == 200
+        assert len(resp.json()["items"]) >= 2
+
+
+class TestCounter:
+    def test_counter_increments(self):
+        created = client.post("/items", json={"name": "Counter Test"}).json()
+        item_id = created["id"]
+        
+        resp1 = client.get(f"/items/{item_id}/counter")
+        assert resp1.status_code == 200
+        val1 = resp1.json()["counter"]
+        
+        resp2 = client.get(f"/items/{item_id}/counter")
+        assert resp2.status_code == 200
+        val2 = resp2.json()["counter"]
+        
+        assert val2 == val1 + 1
